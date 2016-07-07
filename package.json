@@ -1,0 +1,29 @@
+{
+  "name": "brisca-server",
+  "version": "1.0.0",
+  "description": "WebSocketServer for an online game of Brisca",
+  "main": "index.js",
+  "engines": {
+    "node": "6.2.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mario2904/brisca-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mario2904/brisca-server/issues"
+  },
+  "homepage": "https://github.com/mario2904/brisca-server#readme",
+  "dependencies": {
+    "bufferutil": "1.2.1",
+    "express": "4.14.0",
+    "utf-8-validate": "1.2.1",
+    "ws": "1.1.1"
+  }
+}
