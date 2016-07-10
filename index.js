@@ -31,8 +31,10 @@ wss.on('message', (message) => {
 
 // Broadcast the time every second
 
+/*
 setInterval(() => {
   wss.clients.forEach((client) => {
     client.send(new Date().toTimeString());
   });
 }, 1000);
+*/
