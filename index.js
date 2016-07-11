@@ -10,6 +10,11 @@ const PORT = process.env.PORT || 3000;
 const wss = new SocketServer({ port: PORT });
 console.log(`Listening on port: ${ PORT }`)
 
+// Testing
+const players = [];
+const game = null;
+
+const Player = require('./player');
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
@@ -19,7 +24,23 @@ wss.on('connection', (ws) => {
   // Handle request logic here
   ws.on('message', (message) => {
     console.log('received:', message)
-    ws.send('received:' + message);
+
+    // Register player. Format => newPlayer:<newplayer>
+    if(message.startsWith('newPlayer')) {
+      const strNewPlayer = message.split(':')[1];
+      const newPlayer = new Player(strNewPlayer);
+      players.push(newPlayer);
+      ws.send('New player added:' + JSON.stringify(newPlayer));
+    }
+    // Show all registered Players. Format => showAllPlayers
+    else if (message === 'showAllPlayers') {
+      ws.send('All registered Players:' + JSON.stringify(players));
+    }
+    else {
+        ws.send('Command not recognized');
+    }
+
+
   });
 
   ws.on('close', () => {
