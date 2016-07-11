@@ -38,7 +38,13 @@ wss.on('connection', (ws) => {
   // Save ws socket connection mapped to player id
   clients[id] = ws;
   // Send player his username id
-  ws.send('PlayerId: ' + id);
+  const cmdNewPlayer = {cmd: 'playerId', player: id};
+  ws.send(querystring.stringify(cmdNewPlayer));
+  // Broadcast to all players to update their list of players. Only pass their id
+  const cmdUpdatePlayers = {cmd: 'updatePlayers', players: players.map(player => {return player.id})};
+  wss.clients.forEach((client) => {
+    client.send(querystring.stringify(cmdUpdatePlayers));
+  });
 
   // Handle request logic here
   ws.on('message', (message) => {
@@ -48,25 +54,25 @@ wss.on('connection', (ws) => {
     const msg = querystring.parse(message);
     console.log(msg);
 
-    // Delete player. Format => deletePlayer:<player>
+    // Delete player. Format => {cmd: 'deletePlayer', player:'<player>'}
     if(msg.cmd === 'deletePlayer') {
       const i = players.findIndex((player) => player.id === msg.player);
       players.splice(i, 1 );
       ws.send('Player deleted:' + msg.player);
     }
 
-    // Show all registered Players. Format => showAllPlayers
+    // Show all registered Players. Format => {cmd: 'showAllPlayers'}
     else if (msg.cmd === 'showAllPlayers') {
       ws.send('All registered Players:' + JSON.stringify(players));
     }
 
     else {
-        ws.send('Command not recognized', JSON.stringify(msg.cmd));
+      ws.send('Command not recognized', JSON.stringify(msg.cmd));
     }
-
 
   });
 
+  // Handle what happens when player gets disconnected
   ws.on('close', () => {
     console.log('Client disconnected')
     // Remove record of socket connections
@@ -74,12 +80,12 @@ wss.on('connection', (ws) => {
     // Remove player from db
     const i = players.findIndex((player) => player.id === id);
     players.splice(i, 1 );
-
+    // Broadcast to everyone that a player got disconnected.
+    // Send them the updated list.
+    const cmdUpdatePlayers = {cmd: 'updatePlayers', players: players.map(player => {return player.id})};
     wss.clients.forEach((client) => {
-      client.send(`The user: " ${id} " just got disconnected.`);
+      client.send(querystring.stringify(cmdUpdatePlayers));
     });
-
-
 
   });
 
