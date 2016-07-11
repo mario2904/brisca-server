@@ -13,10 +13,8 @@ console.log(`Listening on port: ${ PORT }`)
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
+  ws.send('Connection Established :)')
 
-  ws.on('open', () => {
-    ws.send('Connection Established :)')
-  })
 
   // Handle request logic here
   ws.on('message', (message) => {
