@@ -10,42 +10,59 @@ const PORT = process.env.PORT || 3000;
 const wss = new SocketServer({ port: PORT });
 console.log(`Listening on port: ${ PORT }`)
 
+// QueryString Parser
+const querystring = require('querystring');
+// Random name Generator
+const Moniker = require('moniker');
+
+const Player = require('./player');
+
+
 // Testing
 const players = [];
 const game = null;
 
-const Player = require('./player');
+// Save client connections
+const clients = {};
+
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
-  ws.send('Connection Established :)')
+
+  // Generate a random id
+  const id = Moniker.choose();
+  // and create a new Player with this id as username
+  const newPlayer = new Player(id);
+  // Save player in the db
+  players.push(newPlayer);
+  // Save ws socket connection mapped to player id
+  clients[id] = ws;
+  // Send player his username id
+  ws.send('PlayerId: ' + id);
 
 
   // Handle request logic here
   ws.on('message', (message) => {
-    console.log('received:', message)
+    console.log('Received:', message);
 
-    // Register player. Format => newPlayer:<newplayer>
-    if(message.startsWith('newPlayer')) {
-      const strNewPlayer = message.split(':')[1];
-      const newPlayer = new Player(strNewPlayer);
-      players.push(newPlayer);
-      ws.send('New player added:' + JSON.stringify(newPlayer));
-    }
+    // Parse command message
+    const msg = querystring.parse(message);
+    console.log(msg);
+
     // Delete player. Format => deletePlayer:<player>
-    else if(message.startsWith('deletePlayer')) {
-      const strPlayer = message.split(':')[1];
-      const i = players.findIndex((player) => player.id === strPlayer);
+    if(msg.cmd === 'deletePlayer') {
+      const i = players.findIndex((player) => player.id === msg.player);
       players.splice(i, 1 );
-      ws.send('Player deleted:' + strPlayer);
+      ws.send('Player deleted:' + msg.player);
     }
 
     // Show all registered Players. Format => showAllPlayers
-    else if (message === 'showAllPlayers') {
+    else if (msg.cmd === 'showAllPlayers') {
       ws.send('All registered Players:' + JSON.stringify(players));
     }
+
     else {
-        ws.send('Command not recognized');
+        ws.send('Command not recognized', JSON.stringify(msg.cmd));
     }
 
 
