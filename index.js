@@ -40,7 +40,6 @@ wss.on('connection', (ws) => {
   // Send player his username id
   ws.send('PlayerId: ' + id);
 
-
   // Handle request logic here
   ws.on('message', (message) => {
     console.log('Received:', message);
@@ -70,6 +69,18 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('Client disconnected')
+    // Remove record of socket connections
+    delete clients[id];
+    // Remove player from db
+    const i = players.findIndex((player) => player.id === id);
+    players.splice(i, 1 );
+
+    wss.clients.forEach((client) => {
+      client.send(`The user: " ${id} " just got disconnected.`);
+    });
+
+
+
   });
 
 });
