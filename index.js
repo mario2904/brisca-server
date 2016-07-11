@@ -32,6 +32,14 @@ wss.on('connection', (ws) => {
       players.push(newPlayer);
       ws.send('New player added:' + JSON.stringify(newPlayer));
     }
+    // Delete player. Format => deletePlayer:<player>
+    else if(message.startsWith('deletePlayer')) {
+      const strPlayer = message.split(':')[1];
+      const i = players.findIndex((player) => player.id === strPlayer);
+      players.splice(i, 1 );
+      ws.send('Player deleted:' + strPlayer);
+    }
+
     // Show all registered Players. Format => showAllPlayers
     else if (message === 'showAllPlayers') {
       ws.send('All registered Players:' + JSON.stringify(players));

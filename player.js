@@ -14,9 +14,7 @@ module.exports = class Player {
   // card in player's hand.
   // Removes card from hand and places it in cardPlayed.
   playCard(strCard) {
-    const i = this.cards.findIndex((card) => {
-      return card.card = strCard;
-    });
+    const i = this.cards.findIndex((card) => card.card === strCard);
     this.cardPlayed = (this.cards.splice(i, 1 )).pop();
   }
 
