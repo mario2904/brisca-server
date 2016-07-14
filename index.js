@@ -57,8 +57,41 @@ wss.on('connection', (ws) => {
     // Delete player. Format => {cmd: 'deletePlayer', player:'<player>'}
     if(msg.cmd === 'deletePlayer') {
       const i = players.findIndex((player) => player.id === msg.player);
-      players.splice(i, 1 );
-      ws.send('Player deleted:' + msg.player);
+      // Handle Error if player is not in the db
+      if (i === -1) {
+        const error = {cmd: 'Error', info: 'player not found'};
+        ws.send(querystring.stringify(error));
+      }
+      else {
+        // Delete player from db
+        players.splice(i, 1 );
+        ws.send('Player deleted:' + msg.player);
+      }
+
+    }
+
+    // Show Player information. Format => {cmd: 'getPlayerInfo', player='<player>'}
+    else if (msg.cmd === 'getPlayerInfo') {
+      const i = players.findIndex((player) => player.id === msg.player);
+      // Handle Error if player is not in the db
+      if (i === -1) {
+        const error = {cmd: 'Error', info: 'player not found'};
+        ws.send(querystring.stringify(error));
+      }
+      else {
+        // Get player from db
+        const player = players[i];
+        // Builld the response
+        const playerInfo = {
+          cmd: 'playerInfo',
+          isPlaying: player.isPlaying,
+          points: player.points,
+          gamesWon: player.gamesWon,
+          gamesLost: player.gamesLost
+        }
+        ws.send(querystring.stringify(playerInfo));
+      }
+
     }
 
     // Show all registered Players. Format => {cmd: 'showAllPlayers'}

@@ -6,7 +6,10 @@ module.exports = class Player {
 
   constructor (id) {
     this.id = id;
+    this.isPlaying = false;
     this.points = 0;
+    this.gamesWon = 0;
+    this.gamesLost = 0;
     this.cards = [];
     this.cardPlayed = null;
   }
