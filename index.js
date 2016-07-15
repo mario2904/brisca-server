@@ -84,6 +84,7 @@ wss.on('connection', (ws) => {
         // Builld the response
         const playerInfo = {
           cmd: 'playerInfo',
+          player: player.id,
           isPlaying: player.isPlaying,
           points: player.points,
           gamesWon: player.gamesWon,
