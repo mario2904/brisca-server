@@ -59,7 +59,7 @@ wss.on('connection', (ws) => {
       const i = players.findIndex((player) => player.id === msg.player);
       // Handle Error if player is not in the db
       if (i === -1) {
-        const error = {cmd: 'Error', info: 'player not found'};
+        const error = {cmd: 'Error', info: 'player not found', player: msg.player};
         ws.send(querystring.stringify(error));
       }
       else {
@@ -75,7 +75,7 @@ wss.on('connection', (ws) => {
       const i = players.findIndex((player) => player.id === msg.player);
       // Handle Error if player is not in the db
       if (i === -1) {
-        const error = {cmd: 'Error', info: 'player not found'};
+        const error = {cmd: 'Error', info: 'player not found', player: msg.player};
         ws.send(querystring.stringify(error));
       }
       else {
@@ -100,7 +100,7 @@ wss.on('connection', (ws) => {
     }
 
     else {
-      ws.send('Command not recognized' + JSON.stringify(msg.cmd));
+      ws.send('Command not recognized: ' + JSON.stringify(msg.cmd));
     }
 
   });
