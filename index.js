@@ -100,7 +100,7 @@ wss.on('connection', (ws) => {
     }
 
     else {
-      ws.send('Command not recognized', JSON.stringify(msg.cmd));
+      ws.send('Command not recognized' + JSON.stringify(msg.cmd));
     }
 
   });
