@@ -26,7 +26,7 @@ const game = null;
 const clients = {};
 
 // Game Id Counter (Later change for a random uuid renerator)
-const gameId = 0;
+var gameId = 0;
 
 
 wss.on('connection', (ws) => {
