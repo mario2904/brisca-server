@@ -102,6 +102,8 @@ wss.on('connection', (ws) => {
     }
 
     // Request another player to play. Format => {cmd:'askToPlay', playerFrom: '<playerFrom>', playerTo: '<playerTo>'}
+    // IMPORTANT: For now. the game is created here. Later on it will be moved to it's
+    // own function to accomodate games of more than 2 players.
     else if (msg.cmd === 'askToPlay') {
       // Get player from db
       const player = players[msg.playerTo];
@@ -112,6 +114,9 @@ wss.on('connection', (ws) => {
       }
 
       else {
+        // Create a new 'Game' and save the players (first one is the creator)
+        games[gameId] = [players[msg.playerFrom]];
+
         const generatedGameId = {
           cmd: 'gameId',
           gameId: gameId
@@ -134,14 +139,30 @@ wss.on('connection', (ws) => {
 
     }
 
-    // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', ...}
+    // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', gameId: '<gameId>'}
     else if (msg.cmd === 'acceptRequestToPlay'){
-      //TODO: Fill in logic
+      // Search for the game with id -> msg.gameId
+      const game = games[msg.gameId]
+      // Handle Error if game is not in the db
+      if (game === undefined) {
+        const error = {cmd: 'Error', info: 'game not found', gameId: msg.gameId};
+        ws.send(querystring.stringify(error));
+      }
+      else {
+        // Search myself in the db and add it to the game with id -> msg.gameId
+        game.push(players[id]);
+      }
+
     }
 
     // Show all registered Players. Format => {cmd: 'showAllPlayers'}
     else if (msg.cmd === 'showAllPlayers') {
       ws.send('All registered Players:' + JSON.stringify(players));
+    }
+
+    // Show all registered Games. Format => {cmd: 'showAllGames'}
+    else if (msg.cmd === 'showAllGames') {
+      ws.send('All registered Games:' + JSON.stringify(games));
     }
 
     // Return Error message if it's not none of the above commands.
