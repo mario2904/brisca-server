@@ -18,14 +18,14 @@ const Moniker = require('moniker');
 const Player = require('./player');
 
 
-// Testing
-const players = [];
-const game = null;
+// Tables in db
+const players = {}; // Schema: id: '<playerId>' => player: '<player>'
+const games = {};   // Schema: id: '<gameId>' => players: []
 
 // Save client connections
 const clients = {};
 
-// Game Id Counter (Later change for a random uuid renerator)
+// Game Id Counter (Later change for a random uuid generator)
 var gameId = 0;
 
 
@@ -37,14 +37,14 @@ wss.on('connection', (ws) => {
   // and create a new Player with this id as username
   const newPlayer = new Player(id);
   // Save player in the db
-  players.push(newPlayer);
+  players[id] = newPlayer;
   // Save ws socket connection mapped to player id
   clients[id] = ws;
   // Send player his username id
   const cmdNewPlayer = {cmd: 'playerId', player: id};
   ws.send(querystring.stringify(cmdNewPlayer));
   // Broadcast to all players to update their list of players. Only pass their id
-  const cmdUpdatePlayers = {cmd: 'updatePlayers', players: players.map(player => {return player.id})};
+  const cmdUpdatePlayers = {cmd: 'updatePlayers', players: Object.keys(players)};
   wss.clients.forEach((client) => {
     client.send(querystring.stringify(cmdUpdatePlayers));
   });
@@ -58,16 +58,20 @@ wss.on('connection', (ws) => {
     console.log(msg);
 
     // Delete player. Format => {cmd: 'deletePlayer', player:'<player>'}
+    // TODO: Figure out if this method is necessary. If so, need to Remove
+    // the corresponding client from the dictionary of ws connections
+    // and disconnect him from this ws
     if(msg.cmd === 'deletePlayer') {
-      const i = players.findIndex((player) => player.id === msg.player);
+      // Get player from db
+      const player = players[msg.player];
       // Handle Error if player is not in the db
-      if (i === -1) {
+      if (player === undefined) {
         const error = {cmd: 'Error', info: 'player not found', player: msg.player};
         ws.send(querystring.stringify(error));
       }
       else {
         // Delete player from db
-        players.splice(i, 1 );
+        delete players[msg.player]
         ws.send('Player deleted:' + msg.player);
       }
 
@@ -75,15 +79,14 @@ wss.on('connection', (ws) => {
 
     // Show Player information. Format => {cmd: 'getPlayerInfo', player:'<player>'}
     else if (msg.cmd === 'getPlayerInfo') {
-      const i = players.findIndex((player) => player.id === msg.player);
+      // Get player from db
+      const player = players[msg.player];
       // Handle Error if player is not in the db
-      if (i === -1) {
+      if (player === undefined) {
         const error = {cmd: 'Error', info: 'player not found', player: msg.player};
         ws.send(querystring.stringify(error));
       }
       else {
-        // Get player from db
-        const player = players[i];
         // Builld the response
         const playerInfo = {
           cmd: 'playerInfo',
@@ -100,9 +103,10 @@ wss.on('connection', (ws) => {
 
     // Request another player to play. Format => {cmd:'askToPlay', playerFrom: '<playerFrom>', playerTo: '<playerTo>'}
     else if (msg.cmd === 'askToPlay') {
-      const i = players.findIndex((player) => player.id === msg.playerTo);
+      // Get player from db
+      const player = players[msg.playerTo];
       // Handle Error if playerTo is not in the db
-      if (i === -1) {
+      if (player === undefined) {
         const error = {cmd: 'Error', info: 'player not found', player: msg.playerTo};
         ws.send(querystring.stringify(error));
       }
@@ -140,6 +144,7 @@ wss.on('connection', (ws) => {
       ws.send('All registered Players:' + JSON.stringify(players));
     }
 
+    // Return Error message if it's not none of the above commands.
     else {
       ws.send('Command not recognized: ' + JSON.stringify(msg.cmd));
     }
@@ -152,11 +157,10 @@ wss.on('connection', (ws) => {
     // Remove record of socket connections
     delete clients[id];
     // Remove player from db
-    const i = players.findIndex((player) => player.id === id);
-    players.splice(i, 1 );
+    delete players[id];
     // Broadcast to everyone that a player got disconnected.
     // Send them the updated list.
-    const cmdUpdatePlayers = {cmd: 'updatePlayers', players: players.map(player => {return player.id})};
+    const cmdUpdatePlayers = {cmd: 'updatePlayers', players: Object.keys(players)};
     wss.clients.forEach((client) => {
       client.send(querystring.stringify(cmdUpdatePlayers));
     });
