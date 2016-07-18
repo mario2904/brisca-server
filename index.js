@@ -25,6 +25,9 @@ const game = null;
 // Save client connections
 const clients = {};
 
+// Game Id Counter (Later change for a random uuid renerator)
+const gameId = 0;
+
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
@@ -70,7 +73,7 @@ wss.on('connection', (ws) => {
 
     }
 
-    // Show Player information. Format => {cmd: 'getPlayerInfo', player='<player>'}
+    // Show Player information. Format => {cmd: 'getPlayerInfo', player:'<player>'}
     else if (msg.cmd === 'getPlayerInfo') {
       const i = players.findIndex((player) => player.id === msg.player);
       // Handle Error if player is not in the db
@@ -93,6 +96,43 @@ wss.on('connection', (ws) => {
         ws.send(querystring.stringify(playerInfo));
       }
 
+    }
+
+    // Request another player to play. Format => {cmd:'askToPlay', playerFrom: '<playerFrom>', playerTo: '<playerTo>'}
+    else if (msg.cmd === 'askToPlay') {
+      const i = players.findIndex((player) => player.id === msg.playerTo);
+      // Handle Error if playerTo is not in the db
+      if (i === -1) {
+        const error = {cmd: 'Error', info: 'player not found', player: msg.playerTo};
+        ws.send(querystring.stringify(error));
+      }
+
+      else {
+        const generatedGameId = {
+          cmd: 'gameId',
+          gameId: gameId
+        }
+        // Send the generated gameId
+        ws.send(querystring.stringify(generatedGameId));
+
+        // Build the request
+        const requestToPlay = {
+          cmd: 'requestToPlay',
+          playerFrom: msg.playerFrom,
+          gameId: gameId
+        };
+        // Request playerTo to play a game
+        clients[msg.playerTo].send(querystring.stringify(requestToPlay));
+
+        // Generate new gameId
+        gameId++;
+      }
+
+    }
+
+    // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', ...}
+    else if (msg.cmd === 'acceptRequestToPlay'){
+      //TODO: Fill in logic
     }
 
     // Show all registered Players. Format => {cmd: 'showAllPlayers'}
