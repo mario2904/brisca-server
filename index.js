@@ -156,12 +156,12 @@ wss.on('connection', (ws) => {
       else {
         // Search myself in the db and make (myself) aware that i'm now registered to a game
         // with game id -> 'gameId'. (The one I myself just creaed)
-        players[id].inGame = gameId;
+        players[id].inGame = msg.gameId;
         // Search myself in the db and add it to the game with id -> msg.gameId
         game.push(players[id]);
         // TODO: send a message to all players registered in this game
         // the message contains the updated list of players registered in the game
-        
+
       }
 
     }
