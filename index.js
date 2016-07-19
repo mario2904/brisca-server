@@ -140,7 +140,7 @@ wss.on('connection', (ws) => {
     }
 
     // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', gameId: '<gameId>'}
-    else if (msg.cmd === 'acceptRequestToPlay'){
+    else if (msg.cmd === 'acceptRequestToPlay') {
       // Search for the game with id -> msg.gameId
       const game = games[msg.gameId]
       // Handle Error if game is not in the db
@@ -153,6 +153,11 @@ wss.on('connection', (ws) => {
         game.push(players[id]);
       }
 
+    }
+
+    // Start an already registered game in the db. Format => {cmd: 'startGame'}
+    else if (msg.cmd === 'startGame') {
+      // Check if I myself am the creator of the game
     }
 
     // Show all registered Players. Format => {cmd: 'showAllPlayers'}
