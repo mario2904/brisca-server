@@ -91,7 +91,7 @@ wss.on('connection', (ws) => {
         const playerInfo = {
           cmd: 'playerInfo',
           player: player.id,
-          isPlaying: player.isPlaying,
+          inGame: player.inGame,
           points: player.points,
           gamesWon: player.gamesWon,
           gamesLost: player.gamesLost
@@ -114,8 +114,13 @@ wss.on('connection', (ws) => {
       }
 
       else {
-        // Create a new 'Game' and save the players (first one is the creator)
-        games[gameId] = [players[msg.playerFrom]];
+        // Search myself in the db and make (myself) aware that i'm now registered to a game
+        // with game id -> 'gameId'. (The one I myself just creaed)
+        players[id].inGame = gameId;
+        // Search myself in the db.
+        // Create a new 'Game' with the given gameId.
+        // And register myself as a player in that game.
+        games[gameId] = [players[id]];
 
         const generatedGameId = {
           cmd: 'gameId',
@@ -149,8 +154,14 @@ wss.on('connection', (ws) => {
         ws.send(querystring.stringify(error));
       }
       else {
+        // Search myself in the db and make (myself) aware that i'm now registered to a game
+        // with game id -> 'gameId'. (The one I myself just creaed)
+        players[id].inGame = gameId;
         // Search myself in the db and add it to the game with id -> msg.gameId
         game.push(players[id]);
+        // TODO: send a message to all players registered in this game
+        // the message contains the updated list of players registered in the game
+        
       }
 
     }
