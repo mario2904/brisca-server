@@ -117,17 +117,18 @@ wss.on('connection', (ws) => {
         // Search myself in the db and make (myself) aware that i'm now registered to a game
         // with game id -> 'gameId'. (The one I myself just creaed)
         players[id].inGame = gameId;
-        // Search myself in the db.
         // Create a new 'Game' with the given gameId.
         // And register myself as a player in that game.
-        games[gameId] = [players[id]];
+        // By adding my playerId in the list
+        games[gameId] = [id];
 
-        const generatedGameId = {
-          cmd: 'gameId',
-          gameId: gameId
+        const updateGameInfo = {
+          cmd: 'updateGameInfo',
+          gameId: gameId,
+          players: games[gameId]
         }
-        // Send the generated gameId
-        ws.send(querystring.stringify(generatedGameId));
+        // Send the updated game information
+        ws.send(querystring.stringify(updateGameInfo));
 
         // Build the request
         const requestToPlay = {
@@ -155,12 +156,23 @@ wss.on('connection', (ws) => {
       }
       else {
         // Search myself in the db and make (myself) aware that i'm now registered to a game
-        // with game id -> 'gameId'. (The one I myself just creaed)
+        // with game id -> 'msg.gameId'.
         players[id].inGame = msg.gameId;
-        // Search myself in the db and add it to the game with id -> msg.gameId
-        game.push(players[id]);
-        // TODO: send a message to all players registered in this game
+        // Register myself as a player in that game.
+        // By adding my playerId in the list
+        game.push(id);
+        // Send a message to all players registered in this game
         // the message contains the updated list of players registered in the game
+        const updateGameInfo = {
+          cmd: 'updateGameInfo',
+          gameId: msg.gameId,
+          players: game
+        }
+        // Send the updated game info to all players registered in this game
+        game.forEach(player => {
+          clients[player].send(querystring.stringify(updateGameInfo));
+        });
+
 
       }
 
