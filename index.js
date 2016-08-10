@@ -20,7 +20,7 @@ const Player = require('./player');
 
 // Tables in db
 const players = {}; // Schema: id: '<playerId>' => player: '<player>'
-const games = {};   // Schema: id: '<gameId>' => players: []
+const games = {};   // Schema: id: '<gameId>' => {players: [playerId:String, ...], numOfPlayers: <size: int>}
 
 // Save client connections
 const clients = {};
@@ -101,7 +101,30 @@ wss.on('connection', (ws) => {
 
     }
 
-    // Request another player to play. Format => {cmd:'askToPlay', playerFrom: '<playerFrom>', playerTo: '<playerTo>'}
+    // Create a newGame. Format => {cmd: 'createGame', numOfPlayers: <int>}
+    else if (msg.cmd === 'createGame') {
+      // Search myself in the db and make (myself) aware that i'm now registered to a game
+      // with game id -> 'gameId'. (The one I myself just creaed)
+      players[id].inGame = gameId;
+      // Create a new 'Game' with the given gameId.
+      // And register myself as a player in that game.
+      // By adding my playerId in the list
+      games[gameId].players = [id];
+      // Register the num of players required for the game
+      games[gameId].numOfPlayers = msg.numOfPlayers;
+      // Build queryString to update players registered in that game
+      const updateGameInfo = {
+        cmd: 'updateGameInfo',
+        gameId: gameId,
+        numOfPlayers: games[gameId].numOfPlayers,
+        players: games[gameId].players
+      }
+      // Send the updated game information
+      ws.send(querystring.stringify(updateGameInfo));
+      // Generate new gameId
+      gameId++;
+    }
+    // Request another player to play. Format => {cmd:'askToPlay', playerTo: '<playerTo>'}
     // IMPORTANT: For now. the game is created here. Later on it will be moved to it's
     // own function to accomodate games of more than 2 players.
     else if (msg.cmd === 'askToPlay') {
@@ -114,33 +137,18 @@ wss.on('connection', (ws) => {
       }
 
       else {
-        // Search myself in the db and make (myself) aware that i'm now registered to a game
-        // with game id -> 'gameId'. (The one I myself just creaed)
-        players[id].inGame = gameId;
-        // Create a new 'Game' with the given gameId.
-        // And register myself as a player in that game.
-        // By adding my playerId in the list
-        games[gameId] = [id];
-
-        const updateGameInfo = {
-          cmd: 'updateGameInfo',
-          gameId: gameId,
-          players: games[gameId]
-        }
-        // Send the updated game information
-        ws.send(querystring.stringify(updateGameInfo));
-
+        // Get gameId of game
+        const gameId = players[id].inGame;
         // Build the request
         const requestToPlay = {
           cmd: 'requestToPlay',
-          playerFrom: msg.playerFrom,
+          playerFrom: id,
+          numOfPlayers: games[gameId].numOfPlayers,
           gameId: gameId
         };
         // Request playerTo to play a game
         clients[msg.playerTo].send(querystring.stringify(requestToPlay));
 
-        // Generate new gameId
-        gameId++;
       }
 
     }
@@ -148,7 +156,7 @@ wss.on('connection', (ws) => {
     // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', gameId: '<gameId>'}
     else if (msg.cmd === 'acceptRequestToPlay') {
       // Search for the game with id -> msg.gameId
-      const game = games[msg.gameId]
+      const gamePlayers = games[msg.gameId].players;
       // Handle Error if game is not in the db
       if (game === undefined) {
         const error = {cmd: 'Error', info: 'game not found', gameId: msg.gameId};
@@ -160,19 +168,19 @@ wss.on('connection', (ws) => {
         players[id].inGame = msg.gameId;
         // Register myself as a player in that game.
         // By adding my playerId in the list
-        game.push(id);
+        gamePlayers.push(id);
         // Send a message to all players registered in this game
         // the message contains the updated list of players registered in the game
         const updateGameInfo = {
           cmd: 'updateGameInfo',
           gameId: msg.gameId,
-          players: game
+          numOfPlayers: games[msg.gameId].numOfPlayers,
+          players: gamePlayers
         }
         // Send the updated game info to all players registered in this game
         game.forEach(player => {
           clients[player].send(querystring.stringify(updateGameInfo));
         });
-
 
       }
 
