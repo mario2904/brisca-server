@@ -107,6 +107,7 @@ wss.on('connection', (ws) => {
       // with game id -> 'gameId'. (The one I myself just creaed)
       players[id].inGame = gameId;
       // Create a new 'Game' with the given gameId.
+      games[gameId] = {};
       // And register myself as a player in that game.
       // By adding my playerId in the list
       games[gameId].players = [id];
