@@ -135,7 +135,11 @@ wss.on('connection', (ws) => {
         const error = {cmd: 'Error', info: 'player not found', player: msg.playerTo};
         ws.send(querystring.stringify(error));
       }
-
+      // Handle Error if the player that is requesting isn't registered to a game
+      else if (players[id].inGame === "") {
+        const error = {cmd: 'Error', info: 'player not registered in a game', player: id};
+        ws.send(querystring.stringify(error));
+      }
       else {
         // Get gameId of game
         const gameId = players[id].inGame;
