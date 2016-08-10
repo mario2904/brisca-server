@@ -182,7 +182,7 @@ wss.on('connection', (ws) => {
           players: game.players
         }
         // Send the updated game info to all players registered in this game
-        game.forEach(player => {
+        game.players.forEach(player => {
           clients[player].send(querystring.stringify(updateGameInfo));
         });
 
