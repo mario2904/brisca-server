@@ -160,27 +160,26 @@ wss.on('connection', (ws) => {
 
     // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', gameId: '<gameId>'}
     else if (msg.cmd === 'acceptRequestToPlay') {
-      // Search for the game with id -> msg.gameId
-      const gamePlayers = games[msg.gameId].players;
       // Handle Error if game is not in the db
-      if (game === undefined) {
+      if (games[msg.gameId] === undefined) {
         const error = {cmd: 'Error', info: 'game not found', gameId: msg.gameId};
         ws.send(querystring.stringify(error));
       }
       else {
+        const game = games[msg.gameId];
         // Search myself in the db and make (myself) aware that i'm now registered to a game
         // with game id -> 'msg.gameId'.
         players[id].inGame = msg.gameId;
         // Register myself as a player in that game.
         // By adding my playerId in the list
-        gamePlayers.push(id);
+        game.players.push(id);
         // Send a message to all players registered in this game
         // the message contains the updated list of players registered in the game
         const updateGameInfo = {
           cmd: 'updateGameInfo',
           gameId: msg.gameId,
-          numOfPlayers: games[msg.gameId].numOfPlayers,
-          players: gamePlayers
+          numOfPlayers: game.numOfPlayers,
+          players: game.players
         }
         // Send the updated game info to all players registered in this game
         game.forEach(player => {
