@@ -26,7 +26,7 @@ const games = {};   // Schema: id: '<gameId>' => {players: [playerId:String, ...
 const clients = {};
 
 // Game Id Counter (Later change for a random uuid generator)
-var gameId = 0;
+var gameId = "0";
 
 
 wss.on('connection', (ws) => {
@@ -123,7 +123,7 @@ wss.on('connection', (ws) => {
       // Send the updated game information
       ws.send(querystring.stringify(updateGameInfo));
       // Generate new gameId
-      gameId++;
+      gameId = (parseInt(gameId) + 1).toString();
     }
     // Request another player to play. Format => {cmd:'askToPlay', playerTo: '<playerTo>'}
     // IMPORTANT: For now. the game is created here. Later on it will be moved to it's
