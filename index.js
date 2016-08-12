@@ -195,6 +195,7 @@ wss.on('connection', (ws) => {
           game.players.forEach(playerId => {
             const startGame = {
               cmd: 'startGame',
+              life: game.gameManager.life.card,
               cards: players[playerId].cards.map(card => card.card)
             };
             clients[playerId].send(querystring.stringify(startGame));
