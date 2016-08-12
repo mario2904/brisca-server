@@ -76,7 +76,6 @@ wss.on('connection', (ws) => {
       }
 
     }
-
     // Show Player information. Format => {cmd: 'getPlayerInfo', player:'<player>'}
     else if (msg.cmd === 'getPlayerInfo') {
       // Get player from db
@@ -95,12 +94,11 @@ wss.on('connection', (ws) => {
           points: player.points,
           gamesWon: player.gamesWon,
           gamesLost: player.gamesLost
-        }
+        };
         ws.send(querystring.stringify(playerInfo));
       }
 
     }
-
     // Create a newGame. Format => {cmd: 'createGame', numOfPlayers: <int>}
     else if (msg.cmd === 'createGame') {
       // Search myself in the db and make (myself) aware that i'm now registered to a game
@@ -112,22 +110,20 @@ wss.on('connection', (ws) => {
       // By adding my playerId in the list
       games[gameId].players = [id];
       // Register the num of players required for the game
-      games[gameId].numOfPlayers = msg.numOfPlayers;
+      games[gameId].numOfPlayers = parseInt(msg.numOfPlayers);
       // Build queryString to update players registered in that game
       const updateGameInfo = {
         cmd: 'updateGameInfo',
         gameId: gameId,
         numOfPlayers: games[gameId].numOfPlayers,
         players: games[gameId].players
-      }
+      };
       // Send the updated game information
       ws.send(querystring.stringify(updateGameInfo));
       // Generate new gameId
       gameId = (parseInt(gameId) + 1).toString();
     }
     // Request another player to play. Format => {cmd:'askToPlay', playerTo: '<playerTo>'}
-    // IMPORTANT: For now. the game is created here. Later on it will be moved to it's
-    // own function to accomodate games of more than 2 players.
     else if (msg.cmd === 'askToPlay') {
       // Get player from db
       const player = players[msg.playerTo];
@@ -157,7 +153,6 @@ wss.on('connection', (ws) => {
       }
 
     }
-
     // Accept a given request to play. Format => {cmd: 'acceptRequestToPlay', gameId: '<gameId>'}
     else if (msg.cmd === 'acceptRequestToPlay') {
       // Handle Error if game is not in the db
@@ -180,19 +175,33 @@ wss.on('connection', (ws) => {
           gameId: msg.gameId,
           numOfPlayers: game.numOfPlayers,
           players: game.players
-        }
+        };
         // Send the updated game info to all players registered in this game
         game.players.forEach(player => {
           clients[player].send(querystring.stringify(updateGameInfo));
         });
+        // TODO: check if it has reached the game.numOfPlayers === game.players.length
+        if (game.numOfPlayers === game.players.length) {
+          // Get all players information and store them in new array
+          const gamePlayers = game.players.map(playerId => players[playerId])
+          // Initialize game
+          game.gameManager = new GameManager(gamePlayers);
+          // Send a message to all players registered in this game
+          // Tell them the game is ready to start
+          const startGame = {cmd: 'startGame'}
+          // Send the start game command to all players registered in this game
+          // and tell them their initial cards (hand)
+          game.players.forEach(playerId => {
+            const startGame = {
+              cmd: 'startGame',
+              cards: players[playerId].cards.map(card => card.card)
+            };
+            clients[playerId].send(querystring.stringify(startGame));
+          });
+        }
 
       }
 
-    }
-
-    // Start an already registered game in the db. Format => {cmd: 'startGame'}
-    else if (msg.cmd === 'startGame') {
-      // Check if I myself am the creator of the game
     }
 
     // Show all registered Players. Format => {cmd: 'showAllPlayers'}
