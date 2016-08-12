@@ -16,6 +16,7 @@ const querystring = require('querystring');
 const Moniker = require('moniker');
 
 const Player = require('./player');
+const GameManager = require('./gameManager')
 
 
 // Tables in db
