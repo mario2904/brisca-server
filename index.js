@@ -187,11 +187,8 @@ wss.on('connection', (ws) => {
           const gamePlayers = game.players.map(playerId => players[playerId])
           // Initialize game
           game.gameManager = new GameManager(gamePlayers);
-          // Send a message to all players registered in this game
-          // Tell them the game is ready to start
-          const startGame = {cmd: 'startGame'}
           // Send the start game command to all players registered in this game
-          // and tell them their initial cards (hand)
+          // Tell them their initial cards (hand) and life card
           game.players.forEach(playerId => {
             const startGame = {
               cmd: 'startGame',
