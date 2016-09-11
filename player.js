@@ -13,12 +13,16 @@ module.exports = class Player {
     this.cards = [];
     this.cardPlayed = null;
   }
-  // Really dangerous not checking edge cases. Assuming card is always a valid
-  // card in player's hand.
   // Removes card from hand and places it in cardPlayed.
   playCard(strCard) {
     const i = this.cards.findIndex((card) => card.card === strCard);
-    this.cardPlayed = (this.cards.splice(i, 1 )).pop();
+    if (i !== -1) {
+      this.cardPlayed = (this.cards.splice(i, 1 )).pop();
+      return i;
+    }
+    else {
+      return i;
+    }
   }
 
 
