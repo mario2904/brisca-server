@@ -185,9 +185,10 @@ wss.on('connection', (ws) => {
         // the message contains the updated list of players registered in the game
         const myInfoGame = {
           cmd: 'myInfoGame',
-          id: msg.gameId,
-          numOfPlayers: game.numOfPlayers,
-          players: game.players
+          payload: {
+            id: msg.gameId,
+            numOfPlayers: game.numOfPlayers,
+            players: game.players          }
         };
         // Send the updated game info to all players registered in this game
         game.players.forEach(player => {

@@ -8,13 +8,13 @@
 ##### At the beginning when a client connects to the Web Socket Server, the following messages are sent:
 
 
-| cmd                | payload                 | Message type | Description               |
-|--------------------|-------------------------|--------------|---------------------------|
-| myInfoPlayer       | id: string              | Unicast      | Their random generated ID |
-|                    | inGame: string          |              | Game id, if registered.   |
-|                    | points: int             |              | Total game points         |
-|                    | gamesWon: int           |              | Games won                 |
-|                    | gamesLost: int          |              | Games Lost                |
-| newPlayer          | player: string          | Broadcast    | New player's ID           |
-| initPlayers        | players: array [string] | Unicast      | Currently online players  |
-| initAvailableGames | games: array [string]   | Unicast      | Currently available games |
+| cmd                | Message Type | Payload                 | Description               |
+|--------------------|--------------|-------------------------|---------------------------|
+| myInfoPlayer       | Unicast      | id: string              | Their random generated ID |
+|                    |              | inGame: string          | Game id, if registered.   |
+|                    |              | points: int             | Total game points         |
+|                    |              | gamesWon: int           | Games won                 |
+|                    |              | gamesLost: int          | Games Lost                |
+| newPlayer          | Broadcast    | player: string          | New player's ID           |
+| initPlayers        | Unicast      | players: array [string] | Currently online players  |
+| initAvailableGames | Unicast      | games: array [string]   | Currently available games |
