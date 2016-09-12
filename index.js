@@ -140,15 +140,18 @@ wss.on('connection', (ws) => {
       games[gameId].players = [id];
       // Register the num of players required for the game
       games[gameId].numOfPlayers = parseInt(msg.numOfPlayers);
-      // Build JSON to update players registered in that game
-      const updateGameInfo = {
-        cmd: 'updateGameInfo',
+      // Build JSON of the newly created game.
+      const payload = {
         gameId: gameId,
         numOfPlayers: games[gameId].numOfPlayers,
         players: games[gameId].players
-      };
-      // Send the updated game information
-      ws.send(JSON.stringify(updateGameInfo));
+      }
+      // Send it to myself.
+      ws.send(JSON.stringify({cmd: 'initGame', payload}));
+      // Broadcast the newly created available game. Send only the gameId.
+      wss.clients.forEach((client) => {
+        client.send(JSON.stringify({cmd: 'newAvailableGame', payload: {gameId: payload.gameId}}));
+      });
       // Generate new gameId
       gameId = (parseInt(gameId) + 1).toString();
     }
