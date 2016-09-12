@@ -36,17 +36,13 @@ wss.on('connection', (ws) => {
   const id = Moniker.choose();
   // and create a new Player with this id as username
   const newPlayer = new Player(id);
-  // Save player in the db
-  players[id] = newPlayer;
-  // Save ws socket connection mapped to player id
-  clients[id] = ws;
   // Send player his username id
   const initPlayerId = {cmd: 'initPlayerId', payload: {player: id}};
   ws.send(JSON.stringify(initPlayerId));
   // Broadcast to all players to update their list of players. Pass in the newly
-  // created player.
+  // created player. IMPORTANT: All except the newly created player!
   const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
-  wss.clients.forEach((client) => {
+  clients.forEach((client) => {
     client.send(JSON.stringify(cmdNewPlayer));
   });
   // Send player all currently available players. Their player names
@@ -55,6 +51,10 @@ wss.on('connection', (ws) => {
   // Send player all currently available games. The game ID's
   const initAvailableGames = {cmd: 'initAvailableGames', payload: {games: Object.keys(games)}};
   ws.send(JSON.stringify(initAvailableGames));
+  // Save player in the db
+  players[id] = newPlayer;
+  // Save ws socket connection mapped to player id
+  clients[id] = ws;
   // Handle request logic here
   ws.on('message', (message) => {
     console.log('Received:', message);
