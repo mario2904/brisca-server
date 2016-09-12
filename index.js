@@ -95,11 +95,13 @@ wss.on('connection', (ws) => {
         // Builld the response
         const playerInfo = {
           cmd: 'playerInfo',
-          player: player.id,
-          inGame: player.inGame,
-          points: player.points,
-          gamesWon: player.gamesWon,
-          gamesLost: player.gamesLost
+          payload: {
+            player: player.id,
+            inGame: player.inGame,
+            points: player.points,
+            gamesWon: player.gamesWon,
+            gamesLost: player.gamesLost
+          }
         };
         ws.send(JSON.stringify(playerInfo));
       }
@@ -117,9 +119,11 @@ wss.on('connection', (ws) => {
         // Builld the response
         const gameInfo = {
           cmd: 'gameInfo',
-          gameId: msg.gameId,
-          numOfPlayers: game.numOfPlayers,
-          players: game.players
+          payload: {
+            gameId: msg.gameId,
+            numOfPlayers: game.numOfPlayers,
+            players: game.players
+          }
         };
         ws.send(JSON.stringify(gameInfo));
       }
