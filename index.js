@@ -311,7 +311,7 @@ wss.on('connection', (ws) => {
     delete players[id];
     // Broadcast to everyone that a player got disconnected.
     // Send them the updated list.
-    const deletePlayer = {cmd: 'deletePlayer', player: id};
+    const deletePlayer = {cmd: 'deletePlayer', payload: {player: id}};
     wss.clients.forEach((client) => {
       client.send(JSON.stringify(deletePlayer));
     });
