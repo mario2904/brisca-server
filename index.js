@@ -4,7 +4,7 @@
 const SocketServer = require('ws').Server;
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 
 const wss = new SocketServer({ port: PORT });
@@ -38,6 +38,8 @@ wss.on('connection', (ws) => {
   const newPlayer = new Player(id);
   // Save player in the db
   players[id] = newPlayer;
+  // Save ws socket connection mapped to player id
+  clients[id] = ws;
   // Send player his general Information
   const myInfoPlayer = {
     cmd: 'myInfoPlayer',
@@ -52,8 +54,9 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify(myInfoPlayer));
   // Broadcast to all players to update their list of players. Pass in the newly
   // created player. IMPORTANT: All except the newly created player!
+  console.log("KEYS:", Object.keys(clients));
   const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
-  Object.keys(clients).forEach((client) => {
+  wss.clients.forEach((client) => {
     client.send(JSON.stringify(cmdNewPlayer));
   });
   // Send player all currently available players. Their player names
@@ -62,8 +65,6 @@ wss.on('connection', (ws) => {
   // Send player all currently available games. The game ID's
   const initAvailableGames = {cmd: 'initAvailableGames', payload: {games: Object.keys(games)}};
   ws.send(JSON.stringify(initAvailableGames));
-  // Save ws socket connection mapped to player id
-  clients[id] = ws;
   // Handle request logic here
   ws.on('message', (message) => {
     console.log('Received:', message);
