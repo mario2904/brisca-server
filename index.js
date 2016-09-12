@@ -53,7 +53,7 @@ wss.on('connection', (ws) => {
   };
   ws.send(JSON.stringify(myInfoPlayer));
   // Broadcast to all players to update their list of players. Pass in the newly
-  // created player. IMPORTANT: All except the newly created player!
+  // created player. IMPORTANT: Client must handle getting passed his info 2 times
   console.log("KEYS:", Object.keys(clients));
   const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
   wss.clients.forEach((client) => {
