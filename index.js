@@ -41,14 +41,20 @@ wss.on('connection', (ws) => {
   // Save ws socket connection mapped to player id
   clients[id] = ws;
   // Send player his username id
-  const cmdNewPlayer = {cmd: 'playerId', player: id};
-  ws.send(JSON.stringify(cmdNewPlayer));
-  // Broadcast to all players to update their list of players. Only pass their id
-  const cmdUpdatePlayers = {cmd: 'updatePlayers', players: Object.keys(players)};
+  const initPlayerId = {cmd: 'initPlayerId', payload: {player: id}};
+  ws.send(JSON.stringify(initPlayerId));
+  // Broadcast to all players to update their list of players. Pass in the newly
+  // created player.
+  const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
   wss.clients.forEach((client) => {
-    client.send(JSON.stringify(cmdUpdatePlayers));
+    client.send(JSON.stringify(cmdNewPlayer));
   });
-
+  // Send player all currently available players. Their player names
+  const initPlayers = {cmd: 'initPlayers', payload: {players: Object.keys(players)}};
+  ws.send(JSON.stringify(initPlayers));
+  // Send player all currently available games. The game ID's
+  const initAvailableGames = {cmd: 'initAvailableGames', payload: {games: Object.keys(games)}};
+  ws.send(JSON.stringify(initAvailableGames));
   // Handle request logic here
   ws.on('message', (message) => {
     console.log('Received:', message);
@@ -97,7 +103,26 @@ wss.on('connection', (ws) => {
         };
         ws.send(JSON.stringify(playerInfo));
       }
-
+    }
+    // Show Game information. Format => {cmd: 'getGameInfo', gameId:'<gameId>'}
+    else if (msg.cmd === 'getGameInfo') {
+      // Get game from db
+      const game = games[msg.gameId];
+      // Handle Error if game is not in the db
+      if (game === undefined) {
+        const error = {cmd: 'Error', info: 'game not found', gameId: msg.gameId};
+        ws.send(JSON.stringify(error));
+      }
+      else {
+        // Builld the response
+        const gameInfo = {
+          cmd: 'gameInfo',
+          gameId: msg.gameId,
+          numOfPlayers: game.numOfPlayers,
+          players: game.players
+        };
+        ws.send(JSON.stringify(gameInfo));
+      }
     }
     // Create a newGame. Format => {cmd: 'createGame', numOfPlayers: <int>}
     else if (msg.cmd === 'createGame') {
@@ -282,9 +307,9 @@ wss.on('connection', (ws) => {
     delete players[id];
     // Broadcast to everyone that a player got disconnected.
     // Send them the updated list.
-    const cmdUpdatePlayers = {cmd: 'updatePlayers', players: Object.keys(players)};
+    const deletePlayer = {cmd: 'deletePlayer', player: id};
     wss.clients.forEach((client) => {
-      client.send(JSON.stringify(cmdUpdatePlayers));
+      client.send(JSON.stringify(deletePlayer));
     });
 
   });
