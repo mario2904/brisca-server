@@ -44,7 +44,7 @@ wss.on('connection', (ws) => {
   // Broadcast to all players to update their list of players. Pass in the newly
   // created player. IMPORTANT: All except the newly created player!
   const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
-  clients.forEach((client) => {
+  Object.keys(clients).forEach((client) => {
     client.send(JSON.stringify(cmdNewPlayer));
   });
   // Send player all currently available players. Their player names
