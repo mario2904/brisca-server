@@ -7,6 +7,7 @@
 
 ##### At the beginning when a client connects to the Web Socket Server, the following messages are sent:
 
+
 | cmd                | payload                 | Message type | Description               |
 |--------------------|-------------------------|--------------|---------------------------|
 | myInfoPlayer       | id: string              | Unicast      | Their random generated ID |
