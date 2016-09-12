@@ -38,9 +38,18 @@ wss.on('connection', (ws) => {
   const newPlayer = new Player(id);
   // Save player in the db
   players[id] = newPlayer;
-  // Send player his username id
-  const initPlayerId = {cmd: 'initPlayerId', payload: {player: id}};
-  ws.send(JSON.stringify(initPlayerId));
+  // Send player his general Information
+  const myInfoPlayer = {
+    cmd: 'myInfoPlayer',
+    payload: {
+      id: id,
+      inGame: newPlayer.inGame,
+      points: newPlayer.points,
+      gamesWon: newPlayer.gamesWon,
+      gamesLost: newPlayer.gamesLost
+    }
+  };
+  ws.send(JSON.stringify(myInfoPlayer));
   // Broadcast to all players to update their list of players. Pass in the newly
   // created player. IMPORTANT: All except the newly created player!
   const cmdNewPlayer = {cmd: 'newPlayer', payload: {player: id}};
@@ -96,7 +105,7 @@ wss.on('connection', (ws) => {
         const playerInfo = {
           cmd: 'playerInfo',
           payload: {
-            player: player.id,
+            id: player.id,
             inGame: player.inGame,
             points: player.points,
             gamesWon: player.gamesWon,
@@ -120,7 +129,7 @@ wss.on('connection', (ws) => {
         const gameInfo = {
           cmd: 'gameInfo',
           payload: {
-            gameId: msg.gameId,
+            id: msg.gameId,
             numOfPlayers: game.numOfPlayers,
             players: game.players
           }
@@ -142,19 +151,71 @@ wss.on('connection', (ws) => {
       games[gameId].numOfPlayers = parseInt(msg.numOfPlayers);
       // Build JSON of the newly created game.
       const payload = {
-        gameId: gameId,
+        id: gameId,
         numOfPlayers: games[gameId].numOfPlayers,
         players: games[gameId].players
       }
       // Send it to myself.
-      ws.send(JSON.stringify({cmd: 'initGame', payload}));
+      ws.send(JSON.stringify({cmd: 'myInfoGame', payload}));
       // Broadcast the newly created available game. Send only the gameId.
       wss.clients.forEach((client) => {
-        client.send(JSON.stringify({cmd: 'newAvailableGame', payload: {gameId: payload.gameId}}));
+        client.send(JSON.stringify({cmd: 'newAvailableGame', payload: {gameId: payload.id}}));
       });
       // Generate new gameId
       gameId = (parseInt(gameId) + 1).toString();
     }
+    // Join an existing game. Format => {cmd: 'joinGame', gameId: '<gameId>'}
+    else if (msg.cmd === 'joinGame') {
+      // Handle Error if game is not in the db
+      if (games[msg.gameId] === undefined) {
+        const error = {cmd: 'Error', info: 'game not found', gameId: msg.gameId};
+        ws.send(JSON.stringify(error));
+      }
+      // TODO: Handle error if game is already full.
+      else {
+        const game = games[msg.gameId];
+        // Search myself in the db and make (myself) aware that i'm now registered to a game
+        // with game id -> 'msg.gameId'.
+        players[id].inGame = msg.gameId;
+        // Register myself as a player in that game.
+        // By adding my playerId in the list
+        game.players.push(id);
+        // Send a message to all players registered in this game
+        // the message contains the updated list of players registered in the game
+        const myInfoGame = {
+          cmd: 'myInfoGame',
+          id: msg.gameId,
+          numOfPlayers: game.numOfPlayers,
+          players: game.players
+        };
+        // Send the updated game info to all players registered in this game
+        game.players.forEach(player => {
+          clients[player].send(JSON.stringify(myInfoGame));
+        });
+        // TODO: check if it has reached the game.numOfPlayers === game.players.length
+        if (game.numOfPlayers === game.players.length) {
+          // Get all players information and store them in new array
+          const gamePlayers = game.players.map(playerId => players[playerId])
+          // Initialize game
+          game.gameManager = new GameManager(gamePlayers);
+          // Send the start game command to all players registered in this game
+          // Tell them their initial cards (hand) and life card
+          game.players.forEach(playerId => {
+            const startGame = {
+              cmd: 'startGame',
+              life: game.gameManager.life.card,
+              cards: players[playerId].cards.map(card => card.card)
+            };
+            clients[playerId].send(JSON.stringify(startGame));
+          });
+        }
+
+      }
+
+
+
+    }
+    // Leave commands: askToPlay and acceptRequestToPlay on hold for the moment...
     // Request another player to play. Format => {cmd:'askToPlay', playerTo: '<playerTo>'}
     else if (msg.cmd === 'askToPlay') {
       // Get player from db
