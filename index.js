@@ -201,21 +201,22 @@ wss.on('connection', (ws) => {
           // Initialize game
           game.gameManager = new GameManager(gamePlayers);
           // Send the start game command to all players registered in this game
-          // Tell them their initial cards (hand) and life card
-          game.players.forEach(playerId => {
+          // Tell them their initial cards (hand), life card and players id
+          game.players.forEach((playerId, i) => {
             const startGame = {
               cmd: 'startGame',
-              life: game.gameManager.life.card,
-              cards: players[playerId].cards.map(card => card.card)
+              payload: {
+                life: game.gameManager.life.card,
+                myCards: players[playerId].cards.map(card => card.card),
+                myIndex: i,
+                numOfPlayers: game.players.length,
+                players: game.players
+              }
             };
             clients[playerId].send(JSON.stringify(startGame));
           });
         }
-
       }
-
-
-
     }
     // Leave commands: askToPlay and acceptRequestToPlay on hold for the moment...
     // Request another player to play. Format => {cmd:'askToPlay', playerTo: '<playerTo>'}
@@ -307,19 +308,21 @@ wss.on('connection', (ws) => {
         const error = {cmd: 'Error', info: 'player not registered in a game', player: id};
         ws.send(JSON.stringify(error));
       }
-      const cardPosition = player.playCard(msg.card);
-      if (cardPosition !== -1) {
+      const cardPos = player.playCard(msg.card);
+      if (cardPos !== -1) {
         // Get game from db
         const game = games[gameId];
         // Tell gameManager that a player played a card
         game.gameManager.playersPlayed++;
         // Send the opponentPlayedCard command to all players registered in this game
         // Tell them an opponent played a card
-        const opponentPlayedCard = {
-          cmd: 'opponentPlayedCard',
-          player: id,
-          card: msg.card,
-          cardPosition: cardPosition
+        const playedCard = {
+          cmd: 'playedCard',
+          payload: {
+            player: id,
+            card: msg.card,
+            cardPos: cardPos
+          }
         }
         // Filter out (me), do not send myself this cmd
         game.players.filter(player => player !== id).forEach(playerId => {
@@ -334,8 +337,10 @@ wss.on('connection', (ws) => {
 
           const endRound = {
             cmd: 'endRound',
-            winner: game.players[game.gameManager.winnerIndex],
-            points: game.gameManager.roundPoints
+            payload: {
+              winner: game.players[game.gameManager.winnerIndex],
+              points: game.gameManager.roundPoints
+            }
           };
           // Do after 5 seconds...
           setTimeout(() => {
