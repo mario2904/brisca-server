@@ -326,7 +326,7 @@ wss.on('connection', (ws) => {
         }
         // Filter out (me), do not send myself this cmd
         game.players.filter(player => player !== id).forEach(playerId => {
-          clients[playerId].send(JSON.stringify(opponentPlayedCard));
+          clients[playerId].send(JSON.stringify(playedCard));
         });
         // Check if all Players have played their cards
         if (game.gameManager.playersPlayed === game.numOfPlayers) {
