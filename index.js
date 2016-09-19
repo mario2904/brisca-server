@@ -330,6 +330,9 @@ wss.on('connection', (ws) => {
         });
         // Check if all Players have played their cards
         if (game.gameManager.playersPlayed === game.numOfPlayers) {
+          console.log('Check if All players have player their cards');
+          console.log(game.gameManager.playersPlayed);
+          console.log(game.numOfPlayers);
           // Calculate total Round Points
           game.gameManager.calRoundPoints();
           // Calculate Round Winner
