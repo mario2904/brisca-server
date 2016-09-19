@@ -34,6 +34,7 @@ module.exports = class GameManager {
   nextRound() {
     this.players[this.winnerIndex].points += this.roundPoints;
     this.roundPoints = 0;
+    this.playersPlayed = 0;
 
     // Clear all cardPlayed from all players (Set to null)
     for (var i = 0; i < this.players.length; i++) {
