@@ -320,8 +320,8 @@ wss.on('connection', (ws) => {
           cmd: 'playedCard',
           payload: {
             player: id,
-            card: msg.card,
-            cardPos: cardPos
+            name: msg.card,
+            pos: cardPos
           }
         }
         // Filter out (me), do not send myself this cmd
@@ -334,20 +334,19 @@ wss.on('connection', (ws) => {
           game.gameManager.calRoundPoints();
           // Calculate Round Winner
           game.gameManager.calRoundWinner();
-
-          const endRound = {
-            cmd: 'endRound',
-            payload: {
-              winner: game.players[game.gameManager.winnerIndex],
-              points: game.gameManager.roundPoints
-            }
-          };
-          // Do after 5 seconds...
-          setTimeout(() => {
-            game.players.forEach(playerId => {
-              clients[playerId].send(JSON.stringify(endRound));
-            });
-          }, 5000);
+          // Broadcast to every player in the game that the round has ended.
+          // Hand them their set of cards.
+          game.players.forEach(playerId => {
+            const endRound = {
+              cmd: 'endRound',
+              payload: {
+                winner: game.players[game.gameManager.winnerIndex],
+                points: game.gameManager.roundPoints,
+                myCards: players[playerId].cards.map(card => card.card)
+              }
+            };
+            clients[playerId].send(JSON.stringify(endRound));
+          });
         }
       }
       else {
