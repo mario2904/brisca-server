@@ -39,7 +39,6 @@ module.exports = class GameManager {
     for (var i = 0; i < this.players.length; i++) {
       this.players[i].cardPlayed = null;
     }
-    this.dealCards();
   }
 
   // Sum up all the points for each card played

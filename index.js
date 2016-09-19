@@ -334,6 +334,8 @@ wss.on('connection', (ws) => {
           game.gameManager.calRoundPoints();
           // Calculate Round Winner
           game.gameManager.calRoundWinner();
+          // Load new cards to each player.
+          game.gameManager.dealCards();
           // Broadcast to every player in the game that the round has ended.
           // Hand them their set of cards.
           game.players.forEach(playerId => {
@@ -347,6 +349,8 @@ wss.on('connection', (ws) => {
             };
             clients[playerId].send(JSON.stringify(endRound));
           });
+          // Clear all information of previous round.
+          game.gameManager.nextRound();
         }
       }
       else {
