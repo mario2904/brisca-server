@@ -35,7 +35,7 @@ module.exports = class Deck {
     return this._deck[0];
   }
   isEmpty () {
-    return _deck.length === 0;
+    return this._deck.length === 0;
   }
 
 }
