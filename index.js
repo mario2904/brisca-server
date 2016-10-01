@@ -330,12 +330,8 @@ wss.on('connection', (ws) => {
         });
         // Check if all Players have played their cards
         if (game.gameManager.playersPlayed === game.numOfPlayers) {
-          // Calculate total Round Points
-          game.gameManager.calRoundPoints();
-          // Calculate Round Winner
-          game.gameManager.calRoundWinner();
-          // Load new cards to each player.
-          game.gameManager.dealCards();
+          // Calculate total Round Information and update players cards.
+          game.gameManager.calRound();
           // Broadcast to every player in the game that the round has ended.
           // Hand them their set of cards.
           game.players.forEach(playerId => {
@@ -350,7 +346,19 @@ wss.on('connection', (ws) => {
             clients[playerId].send(JSON.stringify(endRound));
           });
           // Clear all information of previous round.
-          game.gameManager.nextRound();
+          game.gameManager.clearRound();
+          // Check if game has ended
+          if (game.gameManager.hasEnded()) {
+            // Calculate the game winner
+            game.gameManager.calGameWinner();
+            // Broadcast to every player in the game that the game has ended
+            const endGame = {
+              cmd: 'endGame',
+              payload: {
+                winner: game.players[game.gameManager.winnerIndex]
+              }
+            }
+          }
         }
       }
       else {

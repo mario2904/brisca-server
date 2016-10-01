@@ -12,11 +12,11 @@ module.exports = class GameManager {
     this.winnerIndex = 0;
     this.playersPlayed = 0;
     this.roundPoints = 0;
-
+    this.round = 0;
   }
 
   // Used for the first roud. 3 cards for each player.
-  _dealCards(){
+  _dealCards() {
     for (var i = 0; i < this.players.length; i++) {
       for (var j = 0; j < CARDS_PER_PLAYER; j++) {
         let newCard = this.deck.dealCard();
@@ -31,19 +31,14 @@ module.exports = class GameManager {
       this.players[i % this.players.length].cards.push(this.deck.dealCard());
     }
   }
-  nextRound() {
+  clearRound() {
     this.players[this.winnerIndex].points += this.roundPoints;
     this.roundPoints = 0;
     this.playersPlayed = 0;
-
-    // Clear all cardPlayed from all players (Set to null)
-    for (var i = 0; i < this.players.length; i++) {
-      this.players[i].cardPlayed = null;
-    }
   }
 
   // Sum up all the points for each card played
-  calRoundPoints() {
+  _calRoundPoints() {
     for (var i = 0; i < this.players.length; i++) {
       this.roundPoints += this.players[i].cardPlayed.points;
     }
@@ -52,7 +47,7 @@ module.exports = class GameManager {
   // Will reduce the logic later on. First I wanted to state explicitly how
   // the rules work in a human readable way.
   // Calculates the winner of the round.
-  calRoundWinner() {
+  _calRoundWinner() {
     let winnerCard = this.players[this.winnerIndex].cardPlayed;
 
     // Start from the second player on...
@@ -89,6 +84,48 @@ module.exports = class GameManager {
 
   }
 
+  // Calculate Round Info and update players cards
+  calRound() {
+    // Calculate total Round Points
+    this._calRoundPoints();
+    // Calculate Round Winner
+    this._calRoundWinner();
+    // Clear all cardPlayed from all players (Set to null)
+    for (var i = 0; i < this.players.length; i++) {
+      this.players[i].cardPlayed = null;
+    }
+    // Test if there's still cards on the deck.
+    if(!this.deck.isEmpty()) {
+      // Load new cards to each player.
+      this.dealCards();
+    }
+    // Increment round counter
+    this.round++;
+  }
+
+  calGameWinner() {
+    // Assign the winnerIndex value to the index of the winner of the game.
+    for (var i = 0; i < this.players.length; i++) {
+      if (this.players[i].points > this.players[this.winnerIndex].points) {
+        this.winnerIndex = i;
+      }
+    }
+    // Update each players' gamesWon/gamesLost value.
+    for (var i = 0; i < this.players.length; i++) {
+      if (i === this.winnerIndex) {
+        this.players[i].gamesWon++;
+      }
+      else {
+        this.players[i].gamesLost++;
+      }
+    }
+
+  }
+  hasEnded() {
+    return this.round === DECK_SIZE / this.players.length;
+  }
 }
 
-const CARDS_PER_PLAYER = 3
+
+const CARDS_PER_PLAYER = 3;
+const DECK_SIZE = 40;

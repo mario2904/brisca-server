@@ -27,17 +27,20 @@ module.exports = class Deck {
       this._deck[i] = tmp;
     }
   }
-  dealCard() {
+  dealCard () {
     return this._deck.pop();
   }
-  life() {
+  life () {
     //Return the life card, it's the last card dealt from the deck
     return this._deck[0];
+  }
+  isEmpty () {
+    return _deck.length === 0;
   }
 
 }
 
-const DECK_SIZE = 40
+const DECK_SIZE = 40;
 
 const cardNames = ["1o", "2o", "3o", "4o","5o", "6o", "7o", "10o", "11o","12o",
               "1b", "2b", "3b", "4b","5b", "6b", "7b", "10b", "11b","12b",
