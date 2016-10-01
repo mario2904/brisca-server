@@ -358,6 +358,9 @@ wss.on('connection', (ws) => {
                 winner: game.players[game.gameManager.winnerIndex]
               }
             }
+            game.players.forEach(playerId => {
+              clients[playerId].send(JSON.stringify(endGame));
+            });
           }
         }
       }
